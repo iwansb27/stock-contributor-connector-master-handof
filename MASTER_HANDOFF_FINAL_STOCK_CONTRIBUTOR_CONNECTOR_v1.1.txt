@@ -1,0 +1,152 @@
+MASTER HANDOFF FINAL v1.1
+STOCK CONTRIBUTOR CONNECTOR
+
+STATUS BLUEPRINT: FINAL / SOURCE OF TRUTH
+
+Implementation Status: Foundation Working — sebagian E2E sudah terbukti, lifecycle submission platform belum selesai
+Platform Implementation: Floot
+Portability: Dapat dipindahkan ke App Builder lain
+AI Utama: Floot AI
+Jina: NOT USED
+Production Ready: FALSE
+
+CANONICAL FLOW
+UPLOAD → AI ANALYSIS → METADATA → REVIEW → APPROVE → TRANSFER → PLATFORM METADATA READY → FINAL SUBMIT → REVIEW
+
+SYSTEM / USER RESPONSIBILITY BOUNDARIES
+System bertanggung jawab atas upload, analisis, metadata generation, persistence, validation, transfer, status engine, audit trail, error handling, dan evidence.
+User bertanggung jawab atas review, approval, serta final submission ketika platform memerlukan tindakan manual.
+
+DATA MODEL AND PERSISTENCE REQUIREMENTS
+File dan metadata diperlakukan sebagai satu paket kerja contributor. Job ID menjadi identitas lifecycle. Status dan audit harus persisten dan dapat diverifikasi.
+
+AI METADATA CONSTRAINTS
+AI hanya boleh menghasilkan metadata berdasarkan informasi yang tersedia dan tidak boleh mengarang data. Jika informasi tidak terbukti, gunakan status/penanda yang sesuai.
+
+SHUTTERSTOCK ADAPTER FOUNDATION
+JPEG/TIFF; minimum 4MP; sRGB; FTPS; pre-validation; metadata package; CSV fields.
+STRICT RULE: FILE_TRANSFERRED != SUBMITTED
+
+DREAMSTIME ADAPTER FOUNDATION
+Dreamstime E2E: BELUM TERBUKTI
+
+RELEASE SYSTEM STATUSES
+Gunakan canonical status engine dan jangan mengklaim keberhasilan lifecycle berdasarkan satu tahap saja.
+
+PLATFORM FLAGS
+Status platform harus membedakan tahap transfer, metadata readiness, final submission, dan review.
+
+CANONICAL STATUS ENGINE
+Status harus merepresentasikan state yang benar-benar terbukti dari evidence sistem.
+
+STATUS DEFINITIONS
+Setiap status harus memiliki arti operasional yang jelas dan tidak boleh dipakai sebagai shortcut untuk menyatakan tahap berikutnya telah selesai.
+
+ERROR HANDLING
+Error harus tercatat, dapat ditelusuri melalui Job ID/audit, dan tidak boleh disamarkan sebagai success.
+
+DUPLICATE PROTECTION
+Sistem harus mencegah submission/transfer duplikat sesuai identitas job dan lifecycle.
+
+RETRY POLICY
+Retry harus aman, terkontrol, dan tidak menyebabkan duplicate transfer/submission.
+
+SECURITY REQUIREMENTS
+Credentials harus server-side. Tidak boleh ada security bypass.
+
+AI PROVIDER ARCHITECTURE
+Core → AI Adapter → Provider
+Current provider: Floot AI
+Jina: NOT USED
+
+PLATFORM ADAPTER ARCHITECTURE
+Platform-specific behavior harus berada di adapter sehingga core workflow tetap portable.
+
+UI REQUIREMENTS
+UI harus memperlihatkan lifecycle/status yang nyata dan membedakan tindakan system dengan tindakan user.
+
+AUDIT LOG
+Audit trail wajib mencatat perubahan penting dalam lifecycle job.
+
+PERSISTENCE
+Job, metadata, approval, transfer state, status, dan audit harus persisten.
+
+PLATFORM CHANGES
+Perubahan terhadap proven path tidak boleh dilakukan tanpa impact audit.
+
+ACCEPTANCE TESTS
+Acceptance harus berbasis evidence E2E, bukan asumsi atau satu tahap sukses.
+
+NON-NEGOTIABLE RULES
+1. No success claim based on one stage.
+2. File + metadata is one package.
+3. FTP/FTPS not submission.
+4. No fake metadata.
+5. No “tinggal submit” without evidence.
+6. No invented platform APIs.
+7. No security bypass.
+8. Credentials server-side.
+9. Don’t change proven path without impact audit.
+10. Every change tested.
+11. If unproven, write BELUM TERBUKTI.
+12. E2E evidence final standard.
+
+IMPLEMENTATION STATUS — PROVEN
+- Private Floot storage
+- Direct browser upload
+- Job ID + PostgreSQL persistence
+- Job GET persistence
+- Floot AI image analysis
+- AI metadata
+- Metadata persistence
+- User approval persistence
+- Shutterstock FTPS transfer
+
+TRANSFER STATUS + AUDIT
+Transfer status + audit implemented, but post-patch runtime verification: BELUM TERBUKTI
+
+LATEST TEST RESULT
+1 spec passed, 0 failed; 2 hook specs excluded; typecheck clean.
+
+REMAINING GAPS
+1. Job creation immediately on upload is an implementation gap.
+2. FileDropzone not implemented.
+3. React Query V5 refactor not done.
+4. PLATFORM_METADATA_READY not proven.
+
+TRUTH TABLE
+Production Ready: FALSE
+
+CURRENT FLOOT PROJECT STATE
+Project: Stock Contributor Connector
+Floot project ID: 378b06a4-3246-4715-a22d-1d0d690eabf8
+Latest successful patch: 1788747097062
+Latest checkpoint: c80970c2-30ee-4bbd-81f8-d97fe5ab3037
+Checkpoint name: Transfer status + audit Shutterstock
+Project not published to production.
+
+BUILD ENVIRONMENT NOTE
+Floot build/edit quota exhausted; reset 2026-09-08 00:00 UTC / 07:00 WIB.
+
+ARCHITECTURE TRUTH
+The handoff is the source of truth for the connector architecture, lifecycle, status semantics, security boundaries, persistence, adapters, and acceptance standard.
+
+WHAT MUST NOT BE CLAIMED
+Do not claim Production Ready, final submission, platform metadata readiness, or E2E completion unless evidence exists for that exact stage.
+
+NEXT SAFE DEVELOPMENT ORDER
+1. Persistent Job immediately after upload.
+2. Runtime verification transfer status/audit.
+3. Shutterstock metadata application.
+4. Shutterstock CSV validation/import.
+5. Platform metadata-ready evidence.
+6. Manual/final submit boundary.
+7. Pending review evidence.
+8. Dreamstime E2E.
+9. UI improvements FileDropzone + React Query V5.
+
+SAFE DEVELOPMENT RULE
+Impact audit → implement → typecheck → test → runtime verification if applicable → checkpoint → update handoff
+
+MIGRATION RULE
+Handoff is source of truth. Implementation layer may change, but core data model, Job model, adapters, credential/security, persistence, status engine, audit trail, error handling, retry policy, and E2E acceptance standard must remain.
