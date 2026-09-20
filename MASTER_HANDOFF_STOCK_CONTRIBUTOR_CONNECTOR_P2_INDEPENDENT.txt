@@ -1,0 +1,171 @@
+# MASTER HANDOFF — STOCK CONTRIBUTOR CONNECTOR P2 INDEPENDENT
+
+STATUS: P2 BLUEPRINT / OPTIMIZATION
+DATE: 2026-09-20
+
+## 1. PURPOSE
+P2 is the lean, independent direction.
+
+Principle:
+ADOPT ONLY WHAT IS ACTUALLY NEEDED.
+Anything that adds cost, dependency, complexity, or a failed automation path without clear value is NOT adopted.
+
+P2 is not a blind copy of V2 and not a second engine.
+
+## 2. KEEP
+- Image upload.
+- Persistent Job ID.
+- AI image analysis ONLY if it materially improves metadata quality.
+- AI metadata generation.
+- Title / Description / Keywords persistence.
+- One-tap Copy Title.
+- One-tap Copy Description.
+- One-tap Copy All Keywords.
+- Manual Shutterstock category selection.
+- Existing image-transfer mechanism ONLY if it can run independently and securely.
+- Audit/status for real events.
+- Retry/error handling.
+- Direct Open Shutterstock button.
+
+## 3. REMOVE / DO NOT ADOPT
+- Failed automatic metadata transfer.
+- Automatic final Shutterstock submission.
+- Manual CSV workflow on phone.
+- Any unnecessary platform automation that depends on undocumented/private browser behavior.
+- Any service whose only purpose is hosting the UI when a simpler self-hosted/static option is sufficient.
+- Floot as a mandatory runtime dependency for P2.
+- Duplicate engines or duplicate databases.
+
+## 4. P2 HYBRID USER FLOW
+1. Upload image.
+2. Generate metadata.
+3. Copy Title.
+4. Copy Description.
+5. Select Category on Shutterstock.
+6. Copy All Keywords.
+7. Send Image using the proven image-transfer backend, IF retained after technical audit.
+8. Open Shutterstock Contributor.
+9. Paste metadata manually.
+10. Final Submit manually.
+
+## 5. INDEPENDENT ARCHITECTURE
+Preferred separation:
+- Frontend: simple web app / static frontend.
+- Backend: small self-hosted API service.
+- Database: only if persistent Job/audit history is required.
+- Secrets: backend environment variables only.
+- Image transfer: backend FTPS/service path, never browser-side credentials.
+- AI: use an external AI provider only if the metadata quality benefit justifies its cost.
+- If local/non-paid metadata generation is technically adequate, prefer that route.
+- No mandatory Floot dependency.
+
+## 6. COST CONTROL
+P2 must explicitly identify each paid dependency before adoption:
+- AI inference.
+- Hosting.
+- Database.
+- Storage.
+- Image transfer.
+- Domain.
+
+A component is adopted only when:
+A) needed for a required function,
+B) technically compatible,
+C) cost is understood,
+D) there is no simpler adequate alternative.
+
+## 7. SHUTTERSTOCK BOUNDARY
+The connector does not claim to submit metadata or final submission unless real platform evidence exists.
+
+States:
+UPLOADED
+METADATA_READY
+IMAGE_TRANSFERRED
+READY_FOR_SHUTTERSTOCK
+MANUAL_METADATA
+READY_FOR_SUBMIT
+SUBMITTED
+PENDING_REVIEW
+
+FILE_TRANSFERRED != SUBMITTED.
+
+## 8. P2 BUILD ORDER
+PHASE 1 — AUDIT
+1. Identify the actual current implementation source.
+2. Inventory working and failed functions.
+3. Inventory external dependencies and costs.
+4. Keep only required components.
+
+PHASE 2 — CORE
+5. Build/retain upload + Job ID.
+6. Build/retain metadata generation.
+7. Build copy controls.
+8. Build category selection state.
+9. Build direct Shutterstock navigation.
+
+PHASE 3 — TRANSFER
+10. Audit the existing image-transfer backend.
+11. Retain it only if it can operate independently and securely.
+12. Test image transfer with real evidence.
+13. If it cannot be separated safely, replace it with a minimal independent backend before calling P2 complete.
+
+PHASE 4 — PLATFORM BRIDGE
+14. Manual metadata entry on Shutterstock.
+15. Manual final Submit.
+16. No false automation status.
+
+PHASE 5 — VALIDATION
+17. Typecheck.
+18. Tests.
+19. Runtime upload test.
+20. Runtime metadata test.
+21. Runtime image-transfer test.
+22. Runtime audit/status test.
+23. Mobile UI test.
+24. Cost/dependency review.
+25. Checkpoint.
+26. Update handoff with actual evidence.
+
+## 9. GITHUB / PAGES
+GitHub Pages is optional, not an architectural dependency.
+
+Use Pages only for a static frontend if the selected repository/account is eligible.
+
+If using Pages:
+Settings → Pages → Build and deployment → Source → GitHub Actions → run workflow → verify deployment.
+
+Do NOT put:
+- FTPS credentials,
+- API keys,
+- database credentials,
+- server-side transfer code
+into GitHub Pages/static frontend.
+
+The current handoff repository is documentation-only and should not be mistaken for the application source.
+
+## 10. V1 / V2 / P2 RULE
+V1 remains preserved.
+V2 remains preserved as the previous hybrid blueprint.
+P2 is the independent optimization target.
+
+Do not delete V1 or V2.
+Do not declare P2 production-ready until runtime evidence exists.
+Do not freeze/archive earlier versions until the replacement is proven and the user confirms it is comfortable.
+
+## 11. DEFINITION OF DONE
+P2 is complete only when:
+- It runs without mandatory Floot dependency.
+- Required workflow works end-to-end.
+- Image transfer is proven or a minimal independent replacement is proven.
+- Metadata generation works.
+- Copy actions work.
+- Shutterstock category remains manual.
+- Final Submit remains manual.
+- No CSV is required on phone.
+- No secrets are exposed client-side.
+- Cost of every external dependency is known.
+- Failed metadata automation is not presented as working.
+- A real runtime test passes.
+- Handoff contains evidence.
+
+END P2
