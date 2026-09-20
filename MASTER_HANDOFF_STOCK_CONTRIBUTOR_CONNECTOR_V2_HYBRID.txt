@@ -1,0 +1,585 @@
+# MASTER HANDOFF — STOCK CONTRIBUTOR CONNECTOR V2 HYBRID WORKFLOW
+
+STATUS: V2 BLUEPRINT / IMPLEMENTATION HANDOFF
+VERSION: 2.0
+DATE: 2026-09-20
+REPOSITORY: iwansb27/stock-contributor-connector-master-handof
+IMPLEMENTATION LAYER: Floot
+FLOOT PROJECT ID: 378b06a4-3246-4715-a22d-1d0d690eabf8
+
+IMPORTANT:
+- V1 handoff remains preserved as historical source.
+- DO NOT delete V1.
+- V1 must only be marked FROZEN / LEGACY / DO NOT USE AFTER V2 is proven and the user confirms the V2 workflow is comfortable.
+- This V2 is a HYBRID workflow: retain the working engine, replace the failed metadata-submission path, and make the platform-side metadata step intentionally manual.
+- FACTUAL CORRECTION: IMAGE TRANSFER works. METADATA TRANSFER/SENDING has FAILED and is NOT considered working.
+- Never report FILE_TRANSFERRED as SUBMITTED.
+
+============================================================
+1. OBJECTIVE V2
+============================================================
+
+Build one clean contributor workflow around the existing working engine.
+
+The goal is not to rebuild the connector from zero.
+
+KEEP:
+- Existing upload foundation.
+- Job ID / lifecycle identity.
+- PostgreSQL persistence.
+- AI image analysis.
+- AI metadata generation.
+- Existing successful Shutterstock image transfer mechanism.
+- Audit/status foundation where already valid.
+- Server-side credential handling.
+- Duplicate/retry/error principles.
+
+REPLACE / REDESIGN:
+- Failed metadata-transfer workflow.
+- User-facing metadata submission path that depends on the failed automation.
+- Unnecessary CSV work in the phone-facing workflow.
+
+NEW USER EXPERIENCE:
+UPLOAD
+→ GENERATE METADATA
+→ COPY TITLE
+→ COPY DESCRIPTION
+→ SELECT SHUTTERSTOCK CATEGORY
+→ COPY KEYWORDS
+→ SEND IMAGE
+→ OPEN SHUTTERSTOCK CONTRIBUTOR
+→ PASTE/SELECT METADATA MANUALLY
+→ FINAL SUBMIT MANUALLY
+
+============================================================
+2. NON-NEGOTIABLE RULES
+============================================================
+
+1. Do not rebuild the engine if the existing engine already works.
+2. Do not claim metadata transfer is working.
+3. Image transfer and metadata submission are separate lifecycle events.
+4. FILE_TRANSFERRED != SUBMITTED.
+5. Final Shutterstock submission remains manual in V2.
+6. Category is NOT copied from AI metadata. User selects the category from Shutterstock's own available options.
+7. CSV is NOT a user-facing manual step in V2.
+8. Existing V1 remains available as historical fallback until V2 is proven.
+9. No destructive deletion of V1.
+10. Every implementation change follows:
+   IMPACT AUDIT → IMPLEMENT → TYPECHECK → TEST → RUNTIME VERIFY → CHECKPOINT → UPDATE HANDOFF.
+11. No credentials/secrets in frontend code.
+12. No security bypass.
+13. Status must reflect evidence actually observed.
+14. Do not mark PLATFORM_METADATA_READY unless there is real evidence that the platform accepted/has the metadata.
+15. Manual completion must have an explicit status/evidence boundary.
+
+============================================================
+3. V2 USER INTERFACE / ORDER
+============================================================
+
+BLOCK 01 — UPLOAD GAMBAR
+- User selects/uploads image.
+- Create/preserve Job ID.
+- Persist job immediately.
+- Store image reference.
+- Status: UPLOADED.
+
+BLOCK 02 — GENERATE METADATA
+- Run existing AI image analysis.
+- Generate:
+  - Title
+  - Description
+  - Keywords
+- Persist all generated metadata.
+- Status: METADATA_GENERATED.
+
+BLOCK 03 — JUDUL
+- Display generated title.
+- Button: COPY.
+- Copy only title.
+- No automatic submission to Shutterstock.
+
+BLOCK 04 — DESKRIPSI
+- Display generated description.
+- Button: COPY.
+- Copy only description.
+- No automatic submission to Shutterstock.
+
+BLOCK 05 — KATEGORI
+- Display/select the Shutterstock category options required by the current Shutterstock contributor UI.
+- User chooses the category manually.
+- Button/interaction should make clear that category is selected on the platform, not copied from AI.
+- Persist the user's selected category locally if useful for the Job.
+- Do not pretend that category has been submitted to Shutterstock.
+
+BLOCK 06 — KEYWORD
+- Display generated keywords.
+- Button: COPY.
+- Prefer a single COPY ALL for the keyword list.
+- No CSV requirement for the user.
+
+BLOCK 07 — KIRIM GAMBAR
+- Reuse the existing successful Shutterstock image-transfer engine.
+- This action transfers the image only.
+- Do not attach a false metadata-success state to this action.
+- On confirmed transfer:
+  FILE_TRANSFERRED / IMAGE_TRANSFERRED.
+- On failure:
+  TRANSFER_FAILED.
+- Audit the transfer event.
+
+BLOCK 08 — BUKA SHUTTERSTOCK CONTRIBUTOR
+- Add a direct button/shortcut to open the Shutterstock Contributor submission page.
+- The user should not need to search/type the site manually.
+- This button only opens the platform.
+- It does not claim that the image or metadata has been submitted.
+
+BLOCK 09 — MANUAL PLATFORM METADATA
+User completes on Shutterstock:
+- Paste Title.
+- Paste Description.
+- Select Category from Shutterstock's own UI.
+- Paste Keywords.
+- Complete any other platform-required fields visible at that time.
+
+The connector must not claim platform metadata success merely because the user clicked the open button.
+
+BLOCK 10 — FINAL SUBMIT
+- User presses Shutterstock's own final Submit button manually.
+- Connector must not fake or infer final submission.
+- V2 status should distinguish:
+  READY_FOR_MANUAL_SUBMIT
+  from
+  SUBMITTED
+  from
+  PENDING_REVIEW
+  from
+  ACCEPTED/REJECTED where evidence is actually available.
+
+============================================================
+4. RECOMMENDED V2 STATUS MODEL
+============================================================
+
+UPLOADED
+AI_ANALYSIS_COMPLETE
+METADATA_GENERATED
+READY_FOR_COPY
+IMAGE_TRANSFER_PENDING
+IMAGE_TRANSFERRED
+IMAGE_TRANSFER_FAILED
+READY_FOR_PLATFORM_METADATA
+PLATFORM_METADATA_MANUAL
+READY_FOR_MANUAL_SUBMIT
+SUBMITTED
+PENDING_REVIEW
+ACCEPTED
+REJECTED
+FAILED
+
+Important:
+- Do not use SUBMITTED when only the image has transferred.
+- Do not use PLATFORM_METADATA_READY unless there is platform evidence.
+- READY_FOR_PLATFORM_METADATA means the connector has prepared everything the user needs for the manual platform step.
+- READY_FOR_MANUAL_SUBMIT means the user has indicated/recorded that platform metadata entry is complete, but this is still distinct from SUBMITTED unless actual submission evidence exists.
+
+============================================================
+5. DATA / JOB MODEL
+============================================================
+
+Job remains the lifecycle identity.
+
+Minimum package:
+- job_id
+- original filename
+- image storage/reference
+- upload timestamp
+- AI analysis result
+- title
+- description
+- keywords
+- selected category (if user chooses one in connector)
+- image transfer status
+- image transfer timestamp
+- platform metadata status
+- final submission status
+- audit events
+- error information
+- retry information
+
+Metadata and image remain one work package, but their lifecycle states are independent.
+
+============================================================
+6. AUDIT TRAIL
+============================================================
+
+Record meaningful events, including:
+- JOB_CREATED
+- IMAGE_UPLOADED
+- AI_ANALYSIS_COMPLETED
+- METADATA_GENERATED
+- TITLE_COPIED
+- DESCRIPTION_COPIED
+- CATEGORY_SELECTED
+- KEYWORDS_COPIED
+- IMAGE_TRANSFER_STARTED
+- IMAGE_TRANSFERRED
+- IMAGE_TRANSFER_FAILED
+- SHUTTERSTOCK_OPENED
+- MANUAL_METADATA_STARTED
+- MANUAL_METADATA_READY
+- FINAL_SUBMIT_CONFIRMED (only with actual evidence)
+- SUBMITTED
+- PENDING_REVIEW
+- ACCEPTED
+- REJECTED
+- ERROR
+- RETRY
+
+Do not create fake evidence events.
+
+============================================================
+7. WHAT HAPPENS TO THE FAILED METADATA ENGINE
+============================================================
+
+The failed metadata transfer path is NOT treated as production-ready.
+
+V2 approach:
+- Preserve the old implementation for reference.
+- Isolate/disable the failed user-facing metadata transfer path.
+- Keep metadata generation.
+- Keep metadata persistence.
+- Keep image transfer.
+- Replace metadata submission with copy/manual workflow.
+- Keep the adapter architecture so a future proven automation path can be inserted later without redesigning the entire app.
+
+Future automation may be added only after it is independently proven against the real Shutterstock contributor flow.
+
+============================================================
+8. CSV POLICY
+============================================================
+
+V2 USER FLOW:
+- NO manual CSV creation.
+- NO manual CSV download.
+- NO manual CSV upload on phone.
+
+Technical CSV support may remain in the codebase as a future/internal capability if already present, but it must not be required to complete the V2 user workflow.
+
+============================================================
+9. SHUTTERSTOCK BUTTONS
+============================================================
+
+Required user-facing actions:
+- COPY TITLE
+- COPY DESCRIPTION
+- COPY KEYWORDS
+- SEND IMAGE
+- OPEN SHUTTERSTOCK CONTRIBUTOR
+
+Category:
+- SELECT CATEGORY / platform-side manual selection.
+
+Final submission:
+- Manual on Shutterstock.
+
+The OPEN SHUTTERSTOCK button is a navigation shortcut, not an automation claim.
+
+============================================================
+10. IMPLEMENTATION ORDER IN FLOOT
+============================================================
+
+PHASE A — SAFETY / AUDIT
+1. Open current Floot project.
+2. Inspect current files and current working engine.
+3. Inspect current Job/status/audit model.
+4. Identify the exact failed metadata-transfer code path.
+5. Identify the exact working image-transfer path.
+6. Do not change the working transfer engine before understanding dependencies.
+7. Create a baseline checkpoint before V2 changes if the current project has uncheckpointed changes.
+
+PHASE B — JOB / UPLOAD
+8. Ensure Job is created immediately after upload.
+9. Persist image reference and Job ID.
+10. Verify GET/reload persistence.
+11. Keep existing upload behavior if already proven.
+
+PHASE C — METADATA
+12. Keep AI image analysis.
+13. Keep metadata generation.
+14. Persist title/description/keywords.
+15. Add copy actions.
+16. Add category field/state without pretending it was submitted.
+
+PHASE D — FAILED METADATA PATH
+17. Isolate the failed metadata-transfer action.
+18. Remove it from the normal V2 user flow.
+19. Do not delete the old code until dependency impact is understood.
+20. Preserve adapter interfaces for future automation.
+
+PHASE E — IMAGE TRANSFER
+21. Keep existing successful image transfer implementation.
+22. Ensure transfer status is independent from metadata status.
+23. Add/verify audit event.
+24. Runtime-test the actual transfer.
+
+PHASE F — SHUTTERSTOCK MANUAL BRIDGE
+25. Add OPEN SHUTTERSTOCK CONTRIBUTOR button.
+26. Add READY_FOR_PLATFORM_METADATA state.
+27. Add manual metadata state/evidence.
+28. Add READY_FOR_MANUAL_SUBMIT.
+29. Keep SUBMITTED as a separate evidence-based state.
+
+PHASE G — UX
+30. Put the blocks in exactly the order defined in Section 3.
+31. Make COPY buttons obvious and one-tap friendly on Android.
+32. Keep the main workflow simple.
+33. Do not expose technical CSV operations in the main UI.
+34. Show clear success/failure status after image transfer.
+35. Show the user exactly what remains manual.
+
+PHASE H — VALIDATION
+36. Typecheck.
+37. Unit/spec tests.
+38. Runtime upload test.
+39. Runtime AI test.
+40. Runtime metadata persistence test.
+41. Runtime image-transfer test.
+42. Runtime audit test.
+43. Runtime manual bridge/navigation test.
+44. Verify no status incorrectly becomes SUBMITTED.
+45. Create a named Floot checkpoint.
+46. Update V2 handoff with actual verified results.
+
+============================================================
+11. ACCEPTANCE TEST — V2
+============================================================
+
+A V2 build is NOT considered proven until a complete test can demonstrate:
+
+A. Upload creates a persistent Job ID.
+B. Image remains retrievable after reload.
+C. AI analysis succeeds.
+D. Title/description/keywords are generated and persisted.
+E. COPY TITLE works.
+F. COPY DESCRIPTION works.
+G. COPY KEYWORDS works.
+H. Category can be selected/recorded without false platform-success claims.
+I. SEND IMAGE successfully transfers the image using the existing working mechanism.
+J. Transfer event appears in audit.
+K. Metadata is NOT falsely reported as transferred.
+L. OPEN SHUTTERSTOCK CONTRIBUTOR works.
+M. User can manually enter/paste metadata on Shutterstock.
+N. Final Submit remains a manual Shutterstock action.
+O. Connector does not claim SUBMITTED without evidence.
+P. Error/retry behavior remains safe.
+Q. Existing working engine is preserved.
+
+Only after A-Q pass should V2 be treated as the candidate baseline.
+
+============================================================
+12. GITHUB REPOSITORY ROLE
+============================================================
+
+Repository:
+iwansb27/stock-contributor-connector-master-handof
+
+Current role:
+- HANDOFF / DOCUMENTATION repository.
+- The repo currently contains the V1 handoff documentation; it is not the Floot implementation source.
+- Therefore GitHub changes to this repository document the architecture and deployment procedure; they do not by themselves modify the Floot app engine.
+
+Do not confuse:
+GitHub handoff repository
+with
+Floot implementation project.
+
+============================================================
+13. GITHUB PAGES — IMPORTANT PLAN / VISIBILITY CHECK
+============================================================
+
+Current known repository state:
+- This handoff repository is private.
+- User account context is GitHub Free.
+- GitHub's current documentation states GitHub Pages is available on GitHub Free for PUBLIC repositories; private repository Pages requires a supported paid plan. Therefore do not assume this private Free repository can be published as Pages.
+
+Official GitHub documentation:
+- Configuring a publishing source:
+  https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site
+- Custom workflows:
+  https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages
+
+If the target repository is eligible for Pages, use GitHub Actions as the publishing source.
+
+============================================================
+14. GITHUB PAGES SETUP — EXACT MANUAL SETTINGS
+============================================================
+
+After the actual web files exist in the target repository:
+
+1. Open the target GitHub repository.
+2. Open Settings.
+3. Open Pages under Code, planning, and automation.
+4. Under Build and deployment:
+   Source → GitHub Actions.
+5. Save/confirm if GitHub asks.
+6. Open Actions.
+7. Run the deployment workflow if it supports workflow_dispatch.
+8. Wait for the workflow to complete successfully.
+9. Return to Settings → Pages.
+10. Confirm the deployment/site URL.
+11. Open the live URL.
+12. Verify the page loads on Android.
+
+GitHub documents that a custom Pages workflow normally:
+- checks out repository contents,
+- builds if required,
+- uploads a Pages artifact,
+- deploys it with actions/deploy-pages.
+The deploy job requires pages: write and id-token: write permissions.
+
+============================================================
+15. GITHUB ACTIONS WORKFLOW — REFERENCE
+============================================================
+
+For a STATIC site, the workflow pattern is:
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+Do not install this blindly into the handoff-only repository unless it contains an actual website entry file.
+
+============================================================
+16. GITHUB PAGES RUN / VERIFY CHECKLIST
+============================================================
+
+PRE-RUN:
+- Correct repository selected.
+- Repository contains actual static site output or a build process.
+- index.html exists at the top level of the deployed artifact.
+- No secrets are embedded in static files.
+- Pages source is GitHub Actions.
+- Workflow permissions are correct.
+
+RUN:
+1. Commit/push workflow.
+2. Open Actions.
+3. Open Deploy to GitHub Pages.
+4. Wait for build/deploy job.
+5. If failed, inspect the exact failed step.
+6. Fix only the actual failure.
+7. Re-run workflow.
+
+POST-RUN:
+- Settings → Pages shows the deployment.
+- Visit site.
+- Test on Android.
+- Test buttons.
+- Test navigation.
+- Test copy buttons if included in the static UI.
+- Confirm no secret/API credential is exposed.
+
+============================================================
+17. CRITICAL ARCHITECTURE BOUNDARY
+============================================================
+
+GitHub Pages is STATIC HOSTING.
+
+The actual Contributor Connector needs its backend/server/database/credential handling in the existing Floot architecture.
+
+Therefore:
+- Do not move the server-side connector engine into GitHub Pages.
+- Do not expose FTPS credentials in browser code.
+- Do not assume GitHub Pages can replace Floot backend services.
+- If GitHub Pages is used, it should host only a static front-end/demo/documentation layer that does not expose secrets.
+
+============================================================
+18. RUN ORDER — FULL END-TO-END
+============================================================
+
+1. Read V1 handoff.
+2. Preserve V1.
+3. Open Floot project 378b06a4-3246-4715-a22d-1d0d690eabf8.
+4. Inspect current engine.
+5. Identify failed metadata-transfer path.
+6. Identify working image-transfer path.
+7. Create safety checkpoint.
+8. Implement V2 hybrid UI/state flow.
+9. Keep working engine.
+10. Remove failed metadata path from normal user flow.
+11. Add COPY TITLE.
+12. Add COPY DESCRIPTION.
+13. Add CATEGORY selection state.
+14. Add COPY KEYWORDS / COPY ALL.
+15. Keep SEND IMAGE on existing transfer engine.
+16. Add OPEN SHUTTERSTOCK CONTRIBUTOR.
+17. Add manual metadata-ready state.
+18. Keep final Submit manual.
+19. Typecheck.
+20. Test.
+21. Runtime verify.
+22. Create V2 Floot checkpoint.
+23. Update this handoff with actual test evidence.
+24. Only after V2 is proven, mark V1 as FROZEN / LEGACY / DO NOT USE.
+25. If a web-facing static shell is needed, create the actual static files in the correct public/eligible GitHub repository.
+26. Add GitHub Pages Actions workflow.
+27. Set Settings → Pages → Source → GitHub Actions.
+28. Run Actions workflow.
+29. Verify live page.
+30. Do not claim the entire Contributor Connector is deployed to GitHub Pages; only the static layer is.
+
+============================================================
+19. FINAL DEFINITION OF DONE
+============================================================
+
+V2 is DONE only when:
+- Existing working engine remains intact.
+- Image transfer is proven.
+- Metadata generation is proven.
+- Failed metadata transfer is removed from the normal user flow.
+- Copy Title works.
+- Copy Description works.
+- Copy Keywords works.
+- Category is manually selected on Shutterstock.
+- Open Shutterstock button works.
+- Final Submit remains manual.
+- Statuses are truthful.
+- Audit trail is truthful.
+- No CSV is required on phone.
+- Runtime test passes.
+- V2 checkpoint exists.
+- Handoff is updated with actual evidence.
+- V1 remains preserved until user confirms V2 is comfortable.
+
+END OF V2 HANDOFF
