@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stock Contributor Connector — P2</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="app">
+<header>
+  <div>
+    <span class="eyebrow">P2 · INDEPENDENT · GITHUB + GITHUB PAGES</span>
+    <h1>Stock Contributor Connector</h1>
+    <p class="muted">Workflow mandiri untuk menyiapkan gambar dan metadata Shutterstock.</p>
+  </div>
+  <span id="status" class="badge">READY</span>
+</header>
+
+<section class="card">
+  <h2>1. Upload Image</h2>
+  <input id="imageInput" type="file" accept="image/jpeg,image/tiff,image/png">
+  <div id="preview" class="preview empty">Belum ada gambar.</div>
+  <div class="row">
+    <button id="analyzeBtn">Analisis & Siapkan Metadata</button>
+  </div>
+</section>
+
+<section class="card">
+  <h2>2. Metadata</h2>
+  <label>Title <button class="copy" data-copy="title">Copy</button></label>
+  <textarea id="title" rows="2" placeholder="Judul..."></textarea>
+  <label>Description <button class="copy" data-copy="description">Copy</button></label>
+  <textarea id="description" rows="4" placeholder="Deskripsi..."></textarea>
+  <label>Keywords <button class="copy" data-copy="keywords">Copy All</button></label>
+  <textarea id="keywords" rows="5" placeholder="keyword 1, keyword 2, keyword 3..."></textarea>
+  <p class="note">Kategori Shutterstock dipilih langsung di Shutterstock. Tidak disalin dari aplikasi.</p>
+</section>
+
+<section class="card">
+  <h2>3. Shutterstock</h2>
+  <div class="row wrap">
+    <button id="openBtn" class="primary">Buka Shutterstock Contributor</button>
+    <button id="transferBtn" disabled>Kirim Gambar</button>
+  </div>
+  <p id="transferNote" class="note">Transfer gambar belum terhubung pada P2 static-only. Tombol tidak memalsukan keberhasilan.</p>
+</section>
+
+<section class="card">
+  <h2>4. Status Job</h2>
+  <dl class="statusgrid">
+    <dt>Job ID</dt><dd id="jobId">—</dd>
+    <dt>Workflow</dt><dd id="workflow">UPLOADED → METADATA_READY → READY_FOR_SHUTTERSTOCK → MANUAL_SUBMIT</dd>
+    <dt>Final Submit</dt><dd>MANUAL di Shutterstock</dd>
+  </dl>
+</section>
+
+<footer>BY DESIGN ERP · IWAN SETYABUDI · ERP SOLUTION ARCHITECT & MIS DESIGNER</footer>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
