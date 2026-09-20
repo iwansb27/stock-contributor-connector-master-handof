@@ -169,3 +169,30 @@ P2 is complete only when:
 - Handoff contains evidence.
 
 END P2
+
+
+## 12. IMPLEMENTATION CHECKPOINT — 2026-09-20
+P2 static frontend has now been added under /p2 and a GitHub Actions Pages workflow under /.github/workflows/pages.yml.
+
+Implemented:
+- mobile-friendly upload/preview
+- local Job ID
+- metadata workspace
+- Copy Title
+- Copy Description
+- Copy All Keywords
+- direct Shutterstock Contributor button
+- explicit manual category boundary
+- explicit non-fake transfer boundary
+- GitHub Pages deployment workflow targeting /p2
+
+Not implemented and intentionally not claimed:
+- AI API-backed generation (current static fallback derives starter metadata from filename)
+- FTPS image transfer
+- automatic Shutterstock metadata transfer
+- automatic Shutterstock final submit
+- client-side secrets
+
+Reason: the historical Floot implementation source is not accessible in the current account context, so the previously successful FTPS mechanism cannot be safely transplanted without source evidence.
+
+NEXT GATE: test GitHub Pages eligibility/deployment, then audit/recover the real image-transfer implementation before adding any backend.
